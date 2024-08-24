@@ -1,7 +1,8 @@
 import request from '@/utils/request'
 
-const accountApi = '/v1/account'
+const accountApi = '/v1/user'
 
+/*
 export function login(data) {
   return request({
     url: accountApi + '/login',
@@ -23,3 +24,4 @@ export function logout() {
     method: 'post'
   })
 }
+  */

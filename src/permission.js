@@ -5,12 +5,12 @@ import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
-import { resetRouter } from './router'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const whiteList = ['/login'] // no redirect whitelist
 
+// 全局前置守卫
 router.beforeEach(async(to, from, next) => {
   // start progress bar
   NProgress.start()
@@ -32,14 +32,26 @@ router.beforeEach(async(to, from, next) => {
         next()
       } else {
         try {
-          // get user info
-          await store.dispatch('user/getAccount')
+          const permission = await store.dispatch('user/getPermission')
+          if ( permission !== null ) {
+            // get user info
+            await store.dispatch('user/getAccount')
 
-          await store.dispatch('settings/initRoute').then( resp => {
-            router.addRoutes(resp)
-          })
+            if (store.getters.routes.length ===0){
+              await store.dispatch('settings/initRoute').then( () => {
+                router.addRoutes(store.getters.routes)
+              })
 
-          next({...to, replace: true})
+              next({ ...to, replace: true })  
+            }
+          } else {
+            Message({
+              message: "禁止访问！",
+              type: "warning",
+            });
+            await store.dispatch("user/resetToken")
+            NProgress.done();
+          }
         } catch (error) {
           // remove token and go to login page to re-login
           await store.dispatch('user/resetToken')

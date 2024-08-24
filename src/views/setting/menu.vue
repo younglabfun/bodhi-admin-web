@@ -22,7 +22,7 @@
       </el-table-column>
       <el-table-column label="菜单">
         <template slot-scope="{row}">
-          <i v-if="row.icon" :class="row.icon" />
+          <i v-if="row.icon" :class="row.icon" class=“fa-fw” />
           {{ row.title }}
         </template>
       </el-table-column>

@@ -1,4 +1,4 @@
-import { login, logout, getAccount } from '@/api/account'
+import { login, logout, getAccount, getPermission } from '@/api/account'
 import { getToken, setToken, getRefreshToken, setRefreshToken, clearToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
 
@@ -9,7 +9,9 @@ const getDefaultState = () => {
     refreshToken: refreshData.token,
     refreshTime: refreshData.refresh,
     name: '',
-    avatar: ''
+    avatar: '',
+
+    permissions: {}
   }
 }
 
@@ -29,6 +31,9 @@ const mutations = {
   },
   SET_AVATAR: (state, avatar) => {
     state.avatar = avatar
+  },
+  SET_PERMISSION: (state, permissions) => {
+    state.permissions = permissions
   }
 }
 
@@ -65,6 +70,20 @@ const actions = {
         commit('SET_AVATAR', avatar)
         resolve(data)
       }).catch(error => {
+        reject(error)
+      })
+    })
+  },
+
+  // get permission
+  getPermission({ commit }) {
+    return new Promise(( resolve, reject) => {
+      getPermission().then( resp => {
+        // const permission = resp.data.permission
+        const permission = ['all']
+        commit('SET_PERMISSION', permission)
+        resolve(permission)
+      }).catch( error => {
         reject(error)
       })
     })

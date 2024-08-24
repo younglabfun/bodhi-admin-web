@@ -17,6 +17,13 @@ export function getAccount() {
   })
 }
 
+export function getPermission() {
+  return request({
+    url: accountApi + '/get-permission',
+    method: 'get'
+  })
+}
+
 export function logout() {
   return request({
     url: '/vue-admin-template/user/logout',

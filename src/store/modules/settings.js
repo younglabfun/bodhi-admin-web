@@ -1,7 +1,6 @@
 import defaultSettings from '@/settings'
 import { constantRoutes } from '@/router'
 import { getAdminMenus } from '@/api/menu'
-import { toCase } from '@/utils'
 import Layout from '@/layout'
 
 const { showSettings, fixedHeader, sidebarLogo } = defaultSettings
@@ -11,7 +10,7 @@ const state = {
   fixedHeader: fixedHeader,
   sidebarLogo: sidebarLogo,
 
-  routes: constantRoutes
+  routes: []
 }
 
 
@@ -24,9 +23,6 @@ const mutations = {
   },
   SET_ROUTERS: (state, routes) => {
     state.routes = constantRoutes.concat(routes)
-
-        console.log('state router  ', state.routes)
-    // router.addRoutes(routers)
   }
 }
 
@@ -85,14 +81,15 @@ const actions = {
               if (ci.isShow === 0) {
                 child.hidden = true
               }
-              console.log('child route', ci.route, child)
+              // console.log('child route', ci.route, child)
               route.children.push(child)
             }
           }
-          console.log('route', item.route, route)
+          // console.log('route', item.route, route)
           routes.push(route)
         }
-        console.log('router  ', routes)
+        routes.push({ path: '*', redirect: '/404', hidden: true })
+        // console.log('router  ', routes)
         commit('SET_ROUTERS', routes)
         // router.addRoutes(routes)
         resolve(routes)
