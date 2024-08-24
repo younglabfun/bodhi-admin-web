@@ -1,10 +1,7 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="menuType" class="filter-item" @change="handlerChangeType" >
-        <el-option v-for="item in typeOptions" :key="item.id" :label="item.label" :value="item.id" />
-      </el-select>
-      <el-button type="success" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handlerCreate">
+      <el-button type="success" class="filter-item" icon="el-icon-edit" @click="handlerCreate">
         添加
       </el-button>
     </div>
@@ -77,18 +74,18 @@
         </template>
       </el-table-column>
     </el-table>
-    <MenuForm ref="menuForm" @update="fetchData" />
+    <UserForm ref="userForm" @update="fetchData" />
   </div>
 </template>
 
 <script>
 import * as page from '@/utils/pagination'
 import { getMenuTreeData, setStatus } from '@/api/menu'
-import MenuForm from './components/menu-form.vue'
+import UserForm from './components/user-form.vue'
 
 export default {
-  name: 'MenuList',
-  components: { MenuForm },
+  name: 'UserList',
+  components: { UserForm },
   filters: {
     statusFilter(status) {
       return page.statusFilter(status)
@@ -116,10 +113,6 @@ export default {
       },
       outColAction: ['create', 'setStatus', "setShowStatus"],
 
-      typeOptions: [
-        { id: 0, label: '管理菜单' },
-        { id: 1, label: '站点菜单' }
-      ],
       pid: 0,
       menuType: 0,
 
@@ -154,9 +147,6 @@ export default {
         }
         this.listLoading = false
       })
-    },
-    handlerChangeType(){
-      this.fetchData()
     },
     handlerCreate() {
       this.$refs['menuForm'].showDialog('create')

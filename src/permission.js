@@ -33,6 +33,7 @@ router.beforeEach(async(to, from, next) => {
       } else {
         try {
           const permission = await store.dispatch('user/getPermission')
+          console.log('p', permission)
           if ( permission !== null ) {
             // get user info
             await store.dispatch('user/getAccount')
@@ -42,7 +43,7 @@ router.beforeEach(async(to, from, next) => {
                 router.addRoutes(store.getters.routes)
               })
 
-              next({ ...to, replace: true })  
+              next({ ...to, replace: true })
             }
           } else {
             Message({

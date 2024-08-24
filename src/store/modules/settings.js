@@ -43,6 +43,22 @@ const actions = {
         for (const i in list) {
           var item = list[i]
 
+          if (item.route.toLowerCase() === 'dashboard') {
+            var dashboard = {
+              path: '/',
+              component: Layout,
+              redirect: '/dashboard',
+              children: [{
+                path: item.route.toLowerCase(),
+                name: item.route,
+                component: loadComponent(item.component),
+                meta: { title: item.title, icon: item.icon },
+              }]
+            }
+            routes.push(dashboard)
+            continue
+          }
+
           var route = {
             path: '/' + item.route.toLowerCase(),
             component: Layout,
@@ -74,20 +90,18 @@ const actions = {
               var child = {
                 path: ci.href,
                 name: ci.route,
-                // component: (resolve) => Promise.resolve(require('@/views/' + ci.component), resolve),
                 component: loadComponent(ci.component),
                 meta: { title: ci.title, icon: ci.icon }
               }
               if (ci.isShow === 0) {
                 child.hidden = true
               }
-              // console.log('child route', ci.route, child)
               route.children.push(child)
             }
           }
-          // console.log('route', item.route, route)
           routes.push(route)
         }
+        // 动态加载404，解决页面刷新跳转404的问题
         routes.push({ path: '*', redirect: '/404', hidden: true })
         // console.log('router  ', routes)
         commit('SET_ROUTERS', routes)

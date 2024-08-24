@@ -79,8 +79,8 @@ const actions = {
   getPermission({ commit }) {
     return new Promise(( resolve, reject) => {
       getPermission().then( resp => {
-        // const permission = resp.data.permission
-        const permission = ['all']
+        var permission = resp.data.permission
+        permission = ['all']
         commit('SET_PERMISSION', permission)
         resolve(permission)
       }).catch( error => {
