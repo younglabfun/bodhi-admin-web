@@ -116,17 +116,6 @@ export function param2Obj(url) {
   return obj
 }
 
-/**
- * 格式化菜单路径，去除路径中冒号
- * @param {string} path
- * @returns {string}
- */
-export function formartPath(path) {
-  if (path.indexOf(':') < 0) return path
-  var arr = path.split(':')
-  var cut = arr[0].length - 1
-  return arr[0].substring(0, cut)
-}
 
 /**
  * 首字母大写

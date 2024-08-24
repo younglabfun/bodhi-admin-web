@@ -1,7 +1,4 @@
 .DS_Store
-.editorconfig
-.env.development
-.eslintrc.js
 node_modules/
 dist/
 npm-debug.log*

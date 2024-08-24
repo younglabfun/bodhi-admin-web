@@ -56,24 +56,30 @@ export const constantRoutes = [
   },
 
   {
-    path: '/example',
+    path: '/example1',
     component: Layout,
-    redirect: '/example/table',
-    name: 'Example',
-    meta: { title: 'Example', icon: 'el-icon-s-help' },
+    redirect: '/example1/menu',
+    name: 'Example1',
+    meta: { title: 'Example1', icon: 'el-icon-s-help' },
     children: [
       {
-        path: 'table',
-        name: 'Table',
-        component: () => import('@/views/table/index'),
-        meta: { title: 'Table', icon: 'table' }
+        path: 'menu',
+        name: 'Menu',
+        component: () => import('@/views/setting/menu'),
+        meta: { title: 'Menu', icon: '' }
       },
-      {
-        path: 'tree',
-        name: 'Tree',
-        component: () => import('@/views/tree/index'),
-        meta: { title: 'Tree', icon: 'tree' }
-      }
+      // {
+      //   path: 'table',
+      //   name: 'Table',
+      //   component: () => import('@/views/table/index'),
+      //   meta: { title: 'Table', icon: 'table' }
+      // },
+      // {
+      //   path: 'tree',
+      //   name: 'Tree',
+      //   component: () => import('@/views/tree/index'),
+      //   meta: { title: 'Tree', icon: 'tree' }
+      // }
     ]
   },
 
@@ -90,6 +96,7 @@ export const constantRoutes = [
     ]
   },
 
+/*
   {
     path: '/nested',
     component: Layout,
@@ -148,7 +155,7 @@ export const constantRoutes = [
       }
     ]
   },
-
+*/
   {
     path: 'external-link',
     component: Layout,
@@ -165,7 +172,7 @@ export const constantRoutes = [
 ]
 
 const createRouter = () => new Router({
-  // mode: 'history', // require service support
+  mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
   routes: constantRoutes
 })

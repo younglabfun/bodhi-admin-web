@@ -24,16 +24,17 @@ const loadView = (view) => {
 }
 
 const actions = {
-  getMenus({ commit }) {
+  initRoute({ commit }) {
     return new Promise((resolve, reject) => {
       getAdminMenus().then(response => {
         const { data } = response
-        const list = data.list
+        const list = data.tree
+        // console.log('get admin ', list)
         var routers = []
         for (const i in list) {
           // console.log('index ' + i)
           var item = list[i]
-          const path = (item.name.toLowerCase() !== 'dashboard') ? item.name.toLowerCase() : ''
+          const path = (item.route.toLowerCase() !== 'dashboard') ? item.route.toLowerCase() : ''
           var router = {
             path: '/' + path,
             redirect: item.href,
@@ -41,11 +42,14 @@ const actions = {
             meta: { title: item.title, icon: item.icon },
             children: []
           }
+
+          routers.push(router)
+          break
           // console.log('router ', router, item.children)
           if (item.children === null) {
             const children = {
               path: formartPath(item.href),
-              name: item.name.toLowerCase(), // router name
+              name: item.route.toLowerCase(), // router name
               component: loadView(item.component),
               meta: { title: item.title, icon: item.icon }
             }
@@ -53,13 +57,13 @@ const actions = {
             router.children.push(children)
           } else {
             const keys = Object.keys(item.children)
-            router.name = toCase(item.name) // router name
+            router.name = toCase(item.route) // router name
             router.redirect = item.children[keys[0]].href
             for (const j in item.children) {
               var childItem = item.children[j]
               var newChild = {
                 path: formartPath(childItem.href),
-                name: childItem.name, // router name
+                name: childItem.route, // router name
                 component: loadView(childItem.component),
                 meta: { title: childItem.title, icon: childItem.icon, activeMenu: childItem.remark }
               }
@@ -74,7 +78,7 @@ const actions = {
           routers.push(router)
         }
         routers.push({ path: '*', redirect: '/404', hidden: true })
-        console.log('router  ', routers)
+        // console.log('router  ', routers)
         commit('SET_ROUTERS', routers)
         resolve(routers)
       }).catch(error => {
