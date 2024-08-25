@@ -113,7 +113,28 @@ div:focus {
 
 
 .filter-container {
+  position: relative;
   padding-bottom: 10px;
+  .filter-left {
+    position: relative;
+    line-height: 45px;
+    border-bottom: solid 1px #eee;
+    padding-left: 10px;
+    h2 {
+      font-size: 18px;
+      display: inline;
+      margin-right: 5px;
+    }
+    button {
+      margin-left: 5px;
+    }
+  }
+
+  .filter-right {
+    position: absolute;
+    top: 0;
+    right: 5px;
+  }
 
   .filter-item {
     display: inline-block;

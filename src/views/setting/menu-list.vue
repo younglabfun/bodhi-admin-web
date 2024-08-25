@@ -1,12 +1,16 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-select v-model="menuType" class="filter-item" @change="handlerChangeType" >
+      <div class="filter-left">
+      <el-select v-model="menuType" class="filter-item" @change="handleChangeType" >
         <el-option v-for="item in typeOptions" :key="item.id" :label="item.label" :value="item.id" />
       </el-select>
-      <el-button type="success" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handlerCreate">
-        添加
-      </el-button>
+      </div>
+      <div class="filter-right">
+        <el-button type="success" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handleCreate">
+          添加
+        </el-button>
+      </div>
     </div>
     <el-table
       v-loading="listLoading"
@@ -41,7 +45,7 @@
       </el-table-column>
       <el-table-column label="显示" width="80" align="center">
         <template slot-scope="{row}">
-          <el-switch v-if="actions.setShowStatus" v-model="row.isShow" active-value="1" inactive-value="0" @change="handlerSetShow(row)" />
+          <el-switch v-if="actions.setShowStatus" v-model="row.isShow" active-value="1" inactive-value="0" @change="handleSetShow(row)" />
           <el-tag v-if="!actions.setShowStatus" :type="row.isShow | statusStyleFilter" size="small">
             {{ row.isShow | showFilter }}
           </el-tag>
@@ -50,7 +54,7 @@
       <el-table-column label="状态" width="80" align="center">
         <template slot-scope="{row}">
           <el-switch v-if="actions.setStatus" v-model="row.isEnabled" active-value="1" inactive-value="0"
-            @change="handlerSetStatus(row)" />
+            @change="handleSetStatus(row)" />
           <el-tag v-if="!actions.setStatus" :type="row.isEnabled | statusStyleFilter" size="small">
             {{ row.isEnabled | statusFilter }}
           </el-tag>
@@ -68,27 +72,27 @@
       </el-table-column>
       <el-table-column v-if="actionColWidth != 0" label="操作" fixed="right" align="center" :width="actionColWidth">
         <template slot-scope="{row,$index}">
-          <el-button v-if="actions.edit" type="primary" size="mini" @click="handlerEdit(row)">
+          <el-button v-if="actions.edit" type="primary" size="mini" @click="handleEdit(row)">
             编辑
           </el-button>
-          <el-button v-if="actions.remove" type="danger" size="mini" @click="handlerRemove(row, $index)">
+          <el-button v-if="actions.remove" type="danger" size="mini" @click="handleRemove(row, $index)">
             删除
           </el-button>
         </template>
       </el-table-column>
     </el-table>
-    <MenuForm ref="menuForm" @update="fetchData" />
+    <menuForm ref="menuForm" @update="fetchData" />
   </div>
 </template>
 
 <script>
 import * as page from '@/utils/pagination'
 import { getMenuTreeData, setStatus } from '@/api/menu'
-import MenuForm from './components/menu-form.vue'
+import menuForm from './components/menu-form.vue'
 
 export default {
   name: 'MenuList',
-  components: { MenuForm },
+  components: { menuForm },
   filters: {
     statusFilter(status) {
       return page.statusFilter(status)
@@ -155,24 +159,24 @@ export default {
         this.listLoading = false
       })
     },
-    handlerChangeType(){
+    handleChangeType(){
       this.fetchData()
     },
-    handlerCreate() {
+    handleCreate() {
       this.$refs['menuForm'].showDialog('create')
     },
-    handlerEdit(row) {
+    handleEdit(row) {
       this.$refs['menuForm'].showDialog('update', row.id)
     },
-    handlerSetStatus(row) {
+    handleSetStatus(row) {
       this.updateStatus(row, 'IsEnabled')
     },
-    handlerSetShow(row) {
+    handleSetShow(row) {
       this.updateStatus(row, 'IsShow')
     },
     updateStatus(row, status) {
       setStatus(row.id, status).then( (resp) => {
-        var {message, data} = resp.data
+        var {message, data} = resp
         var notifyType = 'error'
         if (data.affected) {
           notifyType =  'success'
