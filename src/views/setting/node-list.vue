@@ -24,12 +24,12 @@
               </div>
             </div>
             <el-table
+              ref="dataTable"
               v-loading="loading"
               :data="list"
-              tripe
-              fit
               highlight-current-row
-              @selection-change="handlerSelectionChange"
+              tripe @row-click="toggleSelection"
+              fit @selection-change="handlerSelectionChange"
             >
               <el-table-column align="center" type="selection" width="45" />
               <el-table-column align="center" label="ID" width="95">
@@ -88,21 +88,24 @@
         </el-tabs>
       </el-col>
     </el-row>
-    <groupForm ref="groupForm" @update="initData" />
-    <nodeForm ref="nodeForm" @update="initData" />
+    <group-form ref="groupForm" @update="initData" />
+    <node-form ref="nodeForm" @update="initData" />
+    <move-form ref="moveForm" @move="handleChangeGroup" />
   </div>
 </template>
 
 <script>
 import * as page from '@/utils/pagination'
 import { listGroup, remove, listByGroup, updateNodeStatus } from '@/api/node'
+import { batchRemove } from '@/api/node'
 import pagination from '@/components/Pagination'
 import groupForm from './components/group-form.vue'
 import nodeForm from './components/node-form.vue';
+import moveForm from './components/move-form.vue'
 
 export default {
   name: 'NodeList',
-  components: { pagination, groupForm, nodeForm },
+  components: { pagination, groupForm, nodeForm, moveForm },
   filters: {
     statusFilter(status) {
       return page.statusFilter(status)
@@ -257,11 +260,68 @@ export default {
     handlerSelectionChange(selection) {
       this.selected = selection
     },
+    toggleSelection(row) {
+      if (this.selected.length != 1) {
+        console.log('only')
+        this.$refs.dataTable.toggleRowSelection(row)
+        return false
+      }
+      this.selected.forEach(rows => {
+        var select = true
+        if (rows === row) {
+          select = false
+        }
+        this.$refs.dataTable.toggleRowSelection(row, select)
+      })
+    },
     handleMove(){
+      if (this.selected.length === 0){
+        this.$notify.warning("请选择需要移动分组的数据！")
+        return false
+      }
+      var ids = []
+      this.selected.forEach( row => {
+        ids.push(row.id)
+      })
+      this.$refs['moveForm'].showDialog(ids, this.groupId)
+    },
+    handleChangeGroup(targetGroup){
+      this.groupId = targetGroup
+      this.groups.forEach(group => {
+        if (group.id == targetGroup) {
+          this.activeTab = group.name
+        }
+      })
 
+      this.fetchGroupNode()
     },
     handleBatchRemove(){
-
+      if (this.selected.length === 0){
+        this.$notify.warning("请选择需要删除的数据！")
+        return false
+      }
+      this.$confirm('确认删除所选数据?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(async() => {
+        var ids = []
+        this.selected.forEach( row => {
+          ids.push(row.id)
+        })
+        var idsJson = JSON.stringify(ids)
+        await batchRemove(idsJson).then(resp => {
+          var {message, data} = resp
+          var notifyType = 'error'
+          if (data.affected) {
+            notifyType =  'success'
+          }
+          this.$notify({
+            message: message,
+            type: notifyType
+          })
+          this.initData()
+        })
+      })
     }
   }
 }

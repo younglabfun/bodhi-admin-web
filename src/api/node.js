@@ -27,6 +27,26 @@ export function updateNodeStatus(id) {
   })
 }
 
+
+export function batchMoveGroup(groupId, ids) {
+  var api = getApi('node')
+  return request({
+    url: api + '/batch-move-group',
+    method: 'post',
+    data: {ids: ids, groupId: groupId}
+  })
+}
+
+
+export function batchRemove(ids) {
+  var api = getApi('node')
+  return request({
+    url: api + '/batch-remove',
+    method: 'post',
+    data: {ids: ids}
+  })
+}
+
 export function listGroup() {
   var api = getApi('group')
   return request({

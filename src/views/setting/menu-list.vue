@@ -81,7 +81,7 @@
         </template>
       </el-table-column>
     </el-table>
-    <menuForm ref="menuForm" @update="fetchData" />
+    <menu-form ref="menuForm" @update="fetchData" />
   </div>
 </template>
 
