@@ -24,12 +24,10 @@
               </div>
             </div>
             <el-table
-              ref="dataTable"
               v-loading="loading"
               :data="list"
               highlight-current-row
-              tripe @row-click="toggleSelection"
-              fit @selection-change="handlerSelectionChange"
+              tripe fit @selection-change="handlerSelectionChange"
             >
               <el-table-column align="center" type="selection" width="45" />
               <el-table-column align="center" label="ID" width="95">
@@ -259,20 +257,6 @@ export default {
     },
     handlerSelectionChange(selection) {
       this.selected = selection
-    },
-    toggleSelection(row) {
-      if (this.selected.length != 1) {
-        console.log('only')
-        this.$refs.dataTable.toggleRowSelection(row)
-        return false
-      }
-      this.selected.forEach(rows => {
-        var select = true
-        if (rows === row) {
-          select = false
-        }
-        this.$refs.dataTable.toggleRowSelection(row, select)
-      })
     },
     handleMove(){
       if (this.selected.length === 0){
