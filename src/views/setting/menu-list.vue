@@ -2,12 +2,12 @@
   <div class="app-container">
     <div class="filter-container">
       <div class="filter-left">
-      <el-select v-model="menuType" class="filter-item" @change="handleChangeType" >
+      <el-select v-model="menuType" size="small" class="filter-item" @change="handleChangeType" >
         <el-option v-for="item in typeOptions" :key="item.id" :label="item.label" :value="item.id" />
       </el-select>
       </div>
       <div class="filter-right">
-        <el-button type="success" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handleCreate">
+        <el-button type="success" size="small" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handleCreate">
           添加
         </el-button>
       </div>

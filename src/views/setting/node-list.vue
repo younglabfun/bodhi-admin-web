@@ -27,7 +27,7 @@
               v-loading="loading"
               :data="list"
               highlight-current-row
-              tripe fit @selection-change="handlerSelectionChange"
+              tripe fit @selection-change="handleSelectionChange"
             >
               <el-table-column align="center" type="selection" width="45" />
               <el-table-column align="center" label="ID" width="95">
@@ -255,7 +255,7 @@ export default {
         })
       })
     },
-    handlerSelectionChange(selection) {
+    handleSelectionChange(selection) {
       this.selected = selection
     },
     handleMove(){

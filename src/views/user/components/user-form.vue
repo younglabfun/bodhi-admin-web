@@ -1,66 +1,35 @@
 <template>
-  <el-dialog :visible.sync="dialogVisible" :title="dialogTitle">
-    <el-form ref="dataForm" :rules="rules" :model="data" label-position="right" label-width="100px">
+  <el-dialog :visible.sync="dialogVisible" :title="dialogTitle" width="40%">
+    <el-form ref="dataForm" :rules="rules" :model="user" label-position="right" label-width="100px">
       <el-row>
-        <el-col :span="24">
-          <el-form-item label="菜单类型" prop="type">
-            <el-select v-model="data.type" @change="handleChange">
-              <el-option v-for="item in typeOptions" :key="item.id" :label="item.label" :value="item.id" />
-            </el-select>
+        <el-col :span="14">
+          <el-form-item label="登录名" prop="username">
+            <el-input v-model="user.username" placeholder="请输入登录名" />
           </el-form-item>
         </el-col>
-        <el-col :span="24">
-          <el-form-item label="上级菜单" prop="pid">
-            <el-select v-model="data.pid">
-              <el-option v-for="item in parentOptions" :key="item.id" :label="item.label" :value="item.id" />
-            </el-select>
+        <el-col :span="14">
+          <el-form-item label="邮件" prop="email">
+            <el-input v-model="user.email" placeholder="请输入邮件地址" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item label="菜单名称" prop="title">
-            <el-input v-model="data.title" placeholder="请输入菜单名" />
+        <el-col v-if="dialogStatus === 'create'" :span="14">
+          <el-form-item label="密码" prop="password">
+            <el-input type="password"  v-model="user.password" placeholder="请输入密码" show-password inline-message="true" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item label="图标" prop="icon">
-            <el-input v-model="data.icon">
-              <template slot="prepend"><i :class="data.icon || 'fa fa-edit'" /></template>
-            </el-input>
+        <el-col v-if="dialogStatus === 'create'" :span="14">
+          <el-form-item label="确认密码" prop="confirmPassword">
+            <el-input type="password"  v-model="user.confirmPassword" placeholder="请输入确认密码" show-password inline-message="true" />
           </el-form-item>
         </el-col>
-        <el-col :span="12">
-          <el-form-item label="路由名" prop="route">
-            <el-input v-model="data.route" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="标识" prop="funcCode">
-            <el-input v-model="data.funcCode" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item label="组件" prop="component">
-            <el-input v-model="data.component" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="24">
-          <el-form-item label="路径或外链" prop="href">
-            <el-input v-model="data.href" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="排序" prop="sort">
-            <el-input-number v-model="data.sort" :min="0" :max="999" />
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="是否显示" prop="isShow">
-            <el-switch v-model="data.isShow" active-value="1" inactive-value="0" />
+        <el-col :span="14">
+          <el-form-item label="昵称" prop="name">
+            <el-input v-model="user.name" />
           </el-form-item>
         </el-col>
         <el-col :span="24">
           <el-form-item label="备注" prop="remark">
-            <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" v-model="data.remark"
+            <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" v-model="user.remark"
               placeholder="请输入备注" />
           </el-form-item>
         </el-col>
@@ -78,37 +47,80 @@
 </template>
 
 <script>
-import { insertMenu, getMenu, updateMenu, getMenuList } from '@/api/menu'
+import { validUsername, validPassword, validConfirmPasswrod } from '@/utils/validate';
+import { getUser, insertUser, updateUser } from '@/api/user';
 
 export default {
   name: 'UserForm',
   data() {
+    const validatorUserName = (rule, value, callback) => {
+      const valid = validUsername(value, 4, 12)
+      if (!valid) {
+        callback(new Error(valid))
+      } else {
+        callback()
+      }
+    }
+    const validatorPassword = (rule, value, callback) => {
+      const valid = validPassword(value)
+      if (!valid) {
+        callback(new Error(valid))
+      } else {
+        callback()
+      }
+    }
+    const validatorConfirmPassword = (rule, value, callback) => {
+      const valid = validConfirmPasswrod(value, this.user.password)
+      if (!valid) {
+        callback(new Error(valid))
+      } else {
+        callback()
+      }
+    }
+    const validatorName = (rule, value, callback) => {
+      var pattern = new RegExp("[`~!@#$^&*()=|{}':; ',\\[\\].<>《》/?~！@#￥……&*（）——|{}【】‘；：”“'。，、？]")
+      if (pattern.test(value)) {
+        callback(new Error('不可以使用特殊字符'))
+      } else{
+        callback()
+      }
+    }
     return {
       dialogVisible: false,
       dialogStatus: '',
       dialogTitle: '',
 
-      data: {},
-      typeOptions: [
-        { id: 0, label: '管理菜单' },
-        { id: 1, label: '站点菜单' }
-      ],
-      parentOptions: [],
+      user: {},
       rules: {
-        title: [{ required: true, message: '标题是必填项', trigger: 'blur' }],
-        route: [{required: true, message: '路由名是必填项', trigger: 'blur'}],
-        sort: [{type: 'integer', min:0, max: 999, required: true, message: '排序是必填项，且只能为小于999的数字', trigger: 'blur'}],
-        component: [{ required: true, message: '组件是必填项', trigger: 'blur' }],
-        href: [{ required: true, message: '路径或外链是必填项', trigger: 'blur' }],
+        username: [
+          { required: true, message: '登录名是必填项', trigger: 'blur' },
+          { trigger: 'blur', validator: validatorUserName }
+        ],
+        password: [
+          {required: true, message: '密码是必填项', trigger: 'blur'},
+          { trigger: 'blur', validator: validatorPassword }
+        ],
+        confirmPassword: [
+          {required: true, message: '确认密码是必填项', trigger: 'blur'},
+          { trigger: 'blur', validator: validatorConfirmPassword }
+        ],
+        email: [
+          {required: true, message: '确认密码是必填项', trigger: 'blur'},
+          { type: 'email', message: 'Email格式错误', trigger: 'blur' }
+        ],
+        name: [
+          { trigger: 'blur', validator: validatorName }],
       }
     }
   },
   methods: {
-    showDialog(mode, id) {
+    showDialog(mode, uuid) {
       this.setDefault()
-      this.data.id = id
       this.dialogStatus = mode
-      this.init()
+      if (mode === 'update') {
+        this.user.userUuid = uuid
+        this.initData()
+      }
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
@@ -116,43 +128,23 @@ export default {
       this.dialogVisible = true
     },
     setDefault() {
-      this.data = Object.assign({}, {
-        id: undefined,
-        type: 0,
-        pid: 0,
-        title: '',
-        funcCode: '',
-        route: '',
-        component: '',
-        href: '',
-        icon: '',
-        sort: 0,
-        isShow: '1',
+      this.user = Object.assign({}, {
+        userUuid: undefined,
+        username: '',
+        password: '',
+        confirmPassword: '',
+        email: '',
+        name: '',
         remark: ''
       })
-    },
-    async init() {
       if (this.dialogStatus === 'update') {
-        await this.initData()
+        delete this.user.password
+        delete this.user.confirmPassword
       }
-      await this.initParentOption()
-    },
-    async initParentOption(){
-      this.parentOptions = []
-      this.parentOptions.push({ id: 0, label: '一级菜单' })
-      await getMenuList(this.data.pid, this.data.type).then( (resp) => {
-        var data = resp.data.list
-        for (var i in data) {
-          if (this.data.id !== undefined && data[i].id === this.data.id) continue
-          var item = {id: data[i].id, label: data[i].title}
-          this.parentOptions.push(item)
-        }
-      })
     },
     async initData() {
-      await getMenu(this.data.id).then((resp) => {
-        this.data = Object.assign({}, resp.data)
-        this.data.isShow = resp.data.isShow.toString()
+      await getUser(this.user.userUuid).then((resp) => {
+        this.user = Object.assign({}, resp.data)
       })
     },
     handleChange() {
@@ -161,10 +153,10 @@ export default {
     createData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          var params = Object.assign({}, this.data)
-          params.sort = parseInt(this.data.sort)
-          params.isShow = parseInt(this.data.isShow)
-          insertMenu(params).then( (resp) => {
+          var params = Object.assign({}, this.user)
+          delete params.confirmPassword
+          console.log('user', this.user, params)
+          insertUser(params).then( (resp) => {
             const {message, data} = resp
             if (data.affected) {
               this.$notify({
@@ -186,10 +178,8 @@ export default {
     updateData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          var params = Object.assign({}, this.data)
-          params.sort = parseInt(this.data.sort)
-          params.isShow = parseInt(this.data.isShow)
-          updateMenu(params).then((resp) => {
+          var params = Object.assign({}, this.user)
+          updateUser(params).then((resp) => {
             const { message, data } = resp
             if (data.affected) {
               this.$notify({

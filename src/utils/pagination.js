@@ -31,7 +31,7 @@ export function getDefaultParams() {
   }
 }
 
-export function getSortClassName( col, sort, order) {
+export function getSortClassName(col, sort, order) {
   if (typeof col !== 'string' || typeof sort !== 'string' || col !== sort) {
     return ''
   }

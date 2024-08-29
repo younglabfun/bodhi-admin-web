@@ -10,6 +10,7 @@ const getDefaultState = () => {
     refreshTime: refreshData.refresh,
     name: '',
     avatar: '',
+    uuid: '',
 
     permissions: {}
   }
@@ -25,6 +26,9 @@ const mutations = {
     state.token = token
     state.refreshToken = token.refreshToken
     state.refreshTime = token.refreshAfter
+  },
+  SET_UUID: (state, uuid) => {
+    state.uuid = uuid
   },
   SET_NAME: (state, name) => {
     state.name = name
@@ -64,8 +68,9 @@ const actions = {
           return reject('Verification failed, please Login again.')
         }
 
-        const { name, avatar } = data
+        const { uuid, name, avatar } = data
 
+        commit('SET_UUID', uuid)
         commit('SET_NAME', name)
         commit('SET_AVATAR', avatar)
         resolve(data)
@@ -92,15 +97,15 @@ const actions = {
   // user logout
   logout({ commit, state }) {
     return new Promise((resolve, reject) => {
-      logout(state.token).then(() => {
+      // logout(state.token).then(() => {
         // removeToken() // must remove  token  first
         clearToken()
         resetRouter()
         commit('RESET_STATE')
         resolve()
-      }).catch(error => {
-        reject(error)
-      })
+      // }).catch(error => {
+      //   reject(error)
+      // })
     })
   },
 

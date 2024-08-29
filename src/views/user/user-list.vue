@@ -1,56 +1,67 @@
 <template>
   <div class="app-container">
     <div class="filter-container">
-      <el-button type="success" class="filter-item" icon="el-icon-edit" @click="handlerCreate">
-        添加
-      </el-button>
+      <div class="filter-left">
+        <el-input
+          v-model="listReq.value"
+          size="small"
+          placeholder="用户名称模糊查询"
+          class="filter-item input"
+          @keyup.enter.native="handleFilter"
+        />
+        <el-button size="small" type="primary" class="filter-item" icon="el-icon-search">
+          搜索
+        </el-button>
+      </div>
+      <div class="filter-right">
+        <el-button size="small" type="success" class="filter-item" icon="el-icon-edit" @click="handleCreate">
+          添加
+        </el-button>
+      </div>
     </div>
     <el-table
       v-loading="listLoading"
       :data="list"
-      row-key="id"
-      tripe
-      fit
+      tripe fit
       highlight-current-row
-      default-expand-all
-      :tree-props="{children: 'children', hasChildren: 'hasChildren'}"
     >
-      <el-table-column align="center" label="ID" width="95">
+      <el-table-column label="UUID" width="230px" fixed>
         <template slot-scope="{row}">
-          {{ row.id }}
+          <span class="uuid">{{ row.userUuid }}</span>
+          <copy-button :copy-data="row.userUuid" />
         </template>
       </el-table-column>
-      <el-table-column label="菜单">
+      <el-table-column label="用户" width="280px">
         <template slot-scope="{row}">
-          <i v-if="row.icon" :class="row.icon" class=“fa-fw” />
-          {{ row.title }}
-        </template>
-      </el-table-column>
-      <el-table-column label="路由名" width="110" align="center">
-        <template slot-scope="{row}">
-          <span>{{ row.route }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="标识" width="110" align="center">
-        <template slot-scope="{row}">
-          {{ row.funcCode }}
-        </template>
-      </el-table-column>
-      <el-table-column label="显示" width="80" align="center">
-        <template slot-scope="{row}">
-          <el-switch v-if="actions.setShowStatus" v-model="row.isShow" active-value="1" inactive-value="0" @change="handlerSetShow(row)" />
-          <el-tag v-if="!actions.setShowStatus" :type="row.isShow | statusStyleFilter" size="small">
-            {{ row.isShow | showFilter }}
+          <span>{{ row.name || '-'}}</span>
+          <el-divider direction="vertical"></el-divider>
+          <span class="username">
+            {{ row.username }}
+            <copy-button :copy-data="row.username" />
+          </span>
+          <el-tag v-if="row.userUuid === myUuid" size="mini" type="success" style="margin-left:5px;">
+            me
           </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="Email" width="180px">
+        <template slot-scope="{row}">
+          <span>{{ row.email || '-'}}</span>
+          <copy-button :copy-data="row.email" />
         </template>
       </el-table-column>
       <el-table-column label="状态" width="80" align="center">
         <template slot-scope="{row}">
-          <el-switch v-if="actions.setStatus" v-model="row.isEnabled" active-value="1" inactive-value="0"
-            @change="handlerSetStatus(row)" />
+          <el-switch v-if="actions.setStatus" :disabled="isDisabled(row)" v-model="row.isEnabled" active-value="1" inactive-value="0"
+            @change="handleSetStatus(row)" />
           <el-tag v-if="!actions.setStatus" :type="row.isEnabled | statusStyleFilter" size="small">
             {{ row.isEnabled | statusFilter }}
           </el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="备注" prop="remark" min-width="230px" :show-overflow-tooltip="true">
+        <template slot-scope="{row}">
+          <span>{{ row.remark || '-' }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -58,34 +69,43 @@
         prop="created_at"
         label="添加时间"
         width="160"
+        sortable="custom"
+        :class-name="page.getSortClassName('created_at', listReq.sort, listReq.order)"
       >
         <template slot-scope="{row}">
           <span>{{ row.createdAt }}</span>
         </template>
       </el-table-column>
       <el-table-column v-if="actionColWidth != 0" label="操作" fixed="right" align="center" :width="actionColWidth">
-        <template slot-scope="{row,$index}">
-          <el-button v-if="actions.edit" type="primary" size="mini" @click="handlerEdit(row)">
+        <template slot-scope="{row}">
+          <el-button v-if="actions.edit" :disabled="isDisabled(row)" type="primary" size="mini" @click="handleEdit(row)">
             编辑
           </el-button>
-          <el-button v-if="actions.remove" type="danger" size="mini" @click="handlerRemove(row, $index)">
+          <el-button v-if="actions.setPwd" :disabled="isDisabled(row)" type="warning" size="mini" @click="handleSetPwd(row)">
+            修改密码
+          </el-button>
+          <el-button v-if="actions.remove" :disabled="isDisabled(row)" type="danger" size="mini" @click="handleRemove(row)">
             删除
           </el-button>
         </template>
       </el-table-column>
     </el-table>
-    <UserForm ref="userForm" @update="fetchData" />
+    <user-form ref="userForm" @update="fetchData" />
+    <pwd-form ref="pwdForm" @update="" />
   </div>
 </template>
 
 <script>
+import store from '@/store'
 import * as page from '@/utils/pagination'
-import { getMenuTreeData, setStatus } from '@/api/menu'
-import UserForm from './components/user-form.vue'
+import { listUser, setUserStatus, removeUser } from '@/api/user'
+import copyButton from '@/components/CopyButton'
+import userForm from './components/user-form.vue'
+import pwdForm from './components/pwd-form.vue'
 
 export default {
   name: 'UserList',
-  components: { UserForm },
+  components: { copyButton, userForm, pwdForm },
   filters: {
     statusFilter(status) {
       return page.statusFilter(status)
@@ -108,22 +128,26 @@ export default {
         create: true,
         edit: true,
         remove: true,
-        setStatus: true,
-        setShowStatus: true,
+        setPwd: true,
+        setStatus: true
       },
-      outColAction: ['create', 'setStatus', "setShowStatus"],
+      outColAction: ['create', 'setStatus'],
 
-      pid: 0,
-      menuType: 0,
+      myUuid: undefined,
 
       list: [],
+      total: 0,
+      listReq: {},
       listLoading: true,
-      actionColWidth: 0
+      actionColWidth: 0,
+      page
     }
   },
   created() {
+    this.listReq = page.getDefaultParams()
     this.actions = page.checkPermission(this.obj, this.actions)
     this.actionColWidth = page.getActionColWidth(this.actions, this.outColAction)
+    this.myUuid = store.getters.uuid
   },
   mounted() {
     this.fetchData()
@@ -132,45 +156,37 @@ export default {
     fetchData() {
       this.listLoading = true
       this.list = []
-      getMenuTreeData(this.menuType).then(resp => {
-        var list = resp.data.tree
+      listUser(this.listReq).then(resp => {
+        var list = resp.data.list
         for (var i in list) {
           var item = list[i]
-          item.isShow = list[i].isShow.toString()
           item.isEnabled = list[i].isEnabled.toString()
-          for (var j in item.children) {
-            item.children[j].isShow = item.children[j].isShow.toString()
-            item.children[j].isEnabled = item.children[j].isEnabled.toString()
-          }
 
           this.list.push(item)
         }
         this.listLoading = false
       })
     },
-    handlerCreate() {
-      this.$refs['menuForm'].showDialog('create')
+    handleCreate() {
+      this.$refs['userForm'].showDialog('create')
     },
-    handlerEdit(row) {
-      this.$refs['menuForm'].showDialog('update', row.id)
+    handleEdit(row) {
+      if (this.isDisabled(row)) {
+        this.$notify({
+          message: '该用户禁止编辑',
+          type: 'warning'
+        })
+        return false
+      }
+      this.$refs['userForm'].showDialog('update', row.userUuid)
     },
-    handlerSetStatus(row) {
-      this.updateStatus(row, 'IsEnabled')
-    },
-    handlerSetShow(row) {
-      this.updateStatus(row, 'IsShow')
-    },
-    updateStatus(row, status) {
-      setStatus(row.id, status).then( (resp) => {
-        var {message, data} = resp.data
+    handleSetStatus(row) {
+      setUserStatus(row.userUuid).then( (resp) => {
+        var {message, data} = resp
         var notifyType = 'error'
-        if (data.affected) {
+        if (data.affected === true) {
           notifyType =  'success'
-          if (status === 'IsEnabled') {
-            message = row.isEnabled === '1' ? '菜单已启用' : '菜单已禁用'
-          } else if (status === 'IsShow') {
-            message = row.isShow === '1' ? '已设置为可见' : '已设置为不可见'
-          }
+          message = row.isEnabled === '1' ? '账号已启用' : '账号已禁用'
         }
         this.$notify({
           message: message,
@@ -178,6 +194,48 @@ export default {
         })
 
       })
+    },
+    handleSetPwd(row) {
+      if (this.isDisabled(row)) {
+        this.$notify({
+          message: '该用户禁止进行操作',
+          type: 'warning'
+        })
+        return false
+      }
+      this.$refs['pwdForm'].showDialog(row.userUuid)
+    },
+    handleRemove(row) {
+      if (this.isDisabled(row)) {
+        this.$notify({
+          message: '该用户禁止进行操作',
+          type: 'warning'
+        })
+        return false
+      }
+      this.$confirm('确认删除该数据?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(async() => {
+        await removeUser(row.userUuid).then(resp => {
+          var {message, data} = resp
+          var notifyType = 'error'
+          if (data.affected) {
+            notifyType =  'success'
+          }
+          this.$notify({
+            message: message,
+            type: notifyType
+          })
+          this.fetchData()
+        })
+      })
+    },
+    isDisabled(row) {
+      if (row.userUuid === store.getters.uuid || row.userUuid === process.env.VUE_APP_MASTER) {
+        return true
+      }
+      return false
     }
   }
 }
