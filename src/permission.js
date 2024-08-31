@@ -37,14 +37,13 @@ router.beforeEach(async(to, from, next) => {
           if ( permission !== null ) {
             // get user info
             await store.dispatch('user/getAccount')
+            console.log('len ', store.getters.routes)
 
-            if (store.getters.routes.length ===0){
-              await store.dispatch('settings/initRoute').then( () => {
-                router.addRoutes(store.getters.routes)
-              })
+            await store.dispatch('settings/initRoute').then( () => {
+              router.addRoutes(store.getters.routes)
+            })
 
-              next({ ...to, replace: true })
-            }
+            next({ ...to, replace: true })
           } else {
             Message({
               message: "禁止访问！",

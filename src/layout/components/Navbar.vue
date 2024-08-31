@@ -21,12 +21,13 @@
           <el-dropdown-item divided @click.native="handleSetPwd">
             <span>修改密码</span>
           </el-dropdown-item>
-          <el-dropdown-item divided @click.native="logout">
+          <el-dropdown-item @click.native="logout">
             <span style="display:block;">退 出</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+    <my-pwd-form ref="pwdForm" @resetPwd="pwdChanged" />
   </div>
 </template>
 
@@ -34,11 +35,13 @@
 import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
+import myPwdForm from '@/views/user/components/my-pwd-form.vue';
 
 export default {
   components: {
     Breadcrumb,
-    Hamburger
+    Hamburger,
+    myPwdForm
   },
   computed: {
     ...mapGetters([
@@ -52,7 +55,10 @@ export default {
       this.$store.dispatch('app/toggleSideBar')
     },
     handleSetPwd(){
-
+      this.$refs['pwdForm'].showDialog()
+    },
+    pwdChanged() {
+      setTimeout(this.logout, 3000);
     },
     async logout() {
       await this.$store.dispatch('user/logout')

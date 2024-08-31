@@ -17,6 +17,14 @@ export function getAccount() {
   })
 }
 
+export function resetPassword(password, newPassword) {
+  return request({
+    url: accountApi + '/reset-password',
+    method: 'post',
+    data: { password: password, newPassword: newPassword,  }
+  })
+}
+
 export function getPermission() {
   return request({
     url: accountApi + '/get-permission',
