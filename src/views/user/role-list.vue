@@ -5,7 +5,7 @@
         <el-input
           v-model="listReq.value"
           size="small"
-          placeholder="用户名称模糊查询"
+          placeholder="角色名称模糊查询"
           class="filter-item input"
           @keyup.enter.native="handleFilter"
         />
@@ -27,27 +27,18 @@
     >
       <el-table-column label="UUID" width="230px" fixed>
         <template slot-scope="{row}">
-          <span class="uuid">{{ row.userUuid }}</span>
-          <copy-button :copy-data="row.userUuid" />
+          <span class="uuid">{{ row.roleUuid }}</span>
+          <copy-button :copy-data="row.roleUuid" />
         </template>
       </el-table-column>
-      <el-table-column label="用户" width="280px">
+      <el-table-column label="角色" width="280px">
         <template slot-scope="{row}">
-          <span>{{ row.name || '-'}}</span>
-          <el-divider direction="vertical"></el-divider>
-          <span class="username">
-            {{ row.username }}
-            <copy-button :copy-data="row.username" />
-          </span>
-          <el-tag v-if="row.userUuid === myUuid" size="mini" type="success" style="margin-left:5px;">
-            me
-          </el-tag>
+          <span>{{ row.name }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="Email" width="180px">
+      <el-table-column label="简介">
         <template slot-scope="{row}">
-          <span>{{ row.email || '-'}}</span>
-          <copy-button :copy-data="row.email" />
+          <span>{{ row.description }}</span>
         </template>
       </el-table-column>
       <el-table-column label="状态" width="80" align="center">
@@ -81,9 +72,6 @@
           <el-button v-if="actions.edit" :disabled="isDisabled(row)" type="primary" size="mini" @click="handleEdit(row)">
             编辑
           </el-button>
-          <el-button v-if="actions.setPwd" :disabled="isDisabled(row)" type="warning" size="mini" @click="handleSetPwd(row)">
-            修改密码
-          </el-button>
           <el-button v-if="actions.remove" :disabled="isDisabled(row)" type="danger" size="mini" @click="handleRemove(row)">
             删除
           </el-button>
@@ -97,23 +85,20 @@
       :limit.sync="listReq.size"
       @pagination="fetchData"
     />
-    <user-form ref="userForm" @update="fetchData" />
-    <pwd-form ref="pwdForm" />
+    <role-form ref="roleForm" @update="fetchData" />
   </div>
 </template>
 
 <script>
-import store from '@/store'
 import * as page from '@/utils/pagination'
-import { listUser, setUserStatus, removeUser } from '@/api/user'
 import copyButton from '@/components/CopyButton'
 import pagination from '@/components/Pagination'
-import userForm from './components/user-form.vue'
-import pwdForm from './components/pwd-form.vue'
+import { listRole, setRoleStatus, removeRole } from '@/api/role'
+import roleForm from './components/role-form.vue'
 
 export default {
   name: 'UserList',
-  components: { pagination, copyButton, userForm, pwdForm },
+  components: { pagination, copyButton, roleForm },
   filters: {
     statusFilter(status) {
       return page.statusFilter(status)
@@ -131,17 +116,14 @@ export default {
   },
   data() {
     return {
-      obj: 'menu',
+      obj: 'role',
       actions: {
         create: true,
         edit: true,
         remove: true,
-        setPwd: true,
         setStatus: true
       },
       outColAction: ['create', 'setStatus'],
-
-      myUuid: undefined,
 
       list: [],
       total: 0,
@@ -155,7 +137,6 @@ export default {
     this.listReq = page.getDefaultParams()
     this.actions = page.checkPermission(this.obj, this.actions)
     this.actionColWidth = page.getActionColWidth(this.actions, this.outColAction)
-    this.myUuid = store.getters.uuid
   },
   mounted() {
     this.fetchData()
@@ -164,7 +145,7 @@ export default {
     fetchData() {
       this.listLoading = true
       this.list = []
-      listUser(this.listReq).then(resp => {
+      listRole(this.listReq).then(resp => {
         var list = resp.data.list
         this.total = resp.data.total
         for (var i in list) {
@@ -177,25 +158,18 @@ export default {
       })
     },
     handleCreate() {
-      this.$refs['userForm'].showDialog('create')
+      this.$refs['roleForm'].showDialog('create')
     },
     handleEdit(row) {
-      if (this.isDisabled(row)) {
-        this.$notify({
-          message: '该用户禁止编辑',
-          type: 'warning'
-        })
-        return false
-      }
-      this.$refs['userForm'].showDialog('update', row.userUuid)
+      this.$refs['roleForm'].showDialog('update', row.roleUuid)
     },
     handleSetStatus(row) {
-      setUserStatus(row.userUuid).then( (resp) => {
+      setRoleStatus(row.roleUuid).then( (resp) => {
         var {message, data} = resp
         var notifyType = 'error'
         if (data.affected === true) {
           notifyType =  'success'
-          message = row.isEnabled === '1' ? '账号已启用' : '账号已禁用'
+          message = row.isEnabled === '1' ? '角色已启用' : '角色已禁用'
         }
         this.$notify({
           message: message,
@@ -204,29 +178,12 @@ export default {
 
       })
     },
-    handleSetPwd(row) {
-      if (this.isDisabled(row)) {
-        this.$notify({
-          message: '该用户禁止进行操作',
-          type: 'warning'
-        })
-        return false
-      }
-      this.$refs['pwdForm'].showDialog(row.userUuid)
-    },
     handleRemove(row) {
-      if (this.isDisabled(row)) {
-        this.$notify({
-          message: '该用户禁止进行操作',
-          type: 'warning'
-        })
-        return false
-      }
       this.$confirm('确认删除该数据?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
       }).then(async() => {
-        await removeUser(row.userUuid).then(resp => {
+        await removeRole(row.userUuid).then(resp => {
           var {message, data} = resp
           var notifyType = 'error'
           if (data.affected) {
@@ -239,12 +196,6 @@ export default {
           this.fetchData()
         })
       })
-    },
-    isDisabled(row) {
-      if (row.userUuid === store.getters.uuid || row.userUuid === process.env.VUE_APP_MASTER) {
-        return true
-      }
-      return false
     }
   }
 }
