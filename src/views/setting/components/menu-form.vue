@@ -140,7 +140,7 @@ export default {
     async initParentOption(){
       this.parentOptions = []
       this.parentOptions.push({ id: 0, label: '一级菜单' })
-      await getMenuList(this.data.pid, this.data.type).then( (resp) => {
+      await getMenuList(0, this.data.type).then( (resp) => {
         var data = resp.data.list
         for (var i in data) {
           if (this.data.id !== undefined && data[i].id === this.data.id) continue

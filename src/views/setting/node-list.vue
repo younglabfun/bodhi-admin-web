@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-row :gutter="20">
       <el-col :span="24">
-        <el-tabs v-model="activeTab" tab-position="left" stretch :addable="actions.create" @edit="handleAddGroup" @tab-click="handleTabClick">
+        <el-tabs v-model="activeTab" tab-position="left" stretch :addable="actions.edit" @edit="handleAddGroup" @tab-click="handleTabClick">
           <el-tab-pane v-for="item in groups" :key="item.id" :label="item.title" :name="item.name">
             <span slot="label">{{ item.title }}</span>
             <div class="filter-container">
@@ -47,9 +47,9 @@
               </el-table-column>
               <el-table-column label="状态" width="80" align="center">
                 <template slot-scope="{row}">
-                  <el-switch v-if="actions.setStatus" v-model="row.isEnabled" active-value="1" inactive-value="0"
+                  <el-switch v-if="actions.edit" v-model="row.isEnabled" active-value="1" inactive-value="0"
                     @change="handleSetStatus(row)" />
-                  <el-tag v-if="!actions.setStatus" :type="row.isEnabled | statusStyleFilter" size="small">
+                  <el-tag v-if="!actions.edit" :type="row.isEnabled | statusStyleFilter" size="small">
                     {{ row.isEnabled | statusFilter }}
                   </el-tag>
                 </template>
@@ -118,10 +118,9 @@ export default {
       actions: {
         create: true,
         edit: true,
-        remove: true,
-        setStatus: true
+        remove: true
       },
-      outColAction: ['create', 'setStatus'],
+      outColAction: ['create',],
       actionColWidth: 0,
 
       groups: [],

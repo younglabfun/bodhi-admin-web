@@ -52,9 +52,9 @@
       </el-table-column>
       <el-table-column label="状态" width="80" align="center">
         <template slot-scope="{row}">
-          <el-switch v-if="actions.setStatus" :disabled="isDisabled(row)" v-model="row.isEnabled" active-value="1" inactive-value="0"
+          <el-switch v-if="actions.edit" :disabled="isDisabled(row)" v-model="row.isEnabled" active-value="1" inactive-value="0"
             @change="handleSetStatus(row)" />
-          <el-tag v-if="!actions.setStatus" :type="row.isEnabled | statusStyleFilter" size="small">
+          <el-tag v-if="!actions.edit" :type="row.isEnabled | statusStyleFilter" size="small">
             {{ row.isEnabled | statusFilter }}
           </el-tag>
         </template>
@@ -143,9 +143,8 @@ export default {
         remove: true,
         setPwd: true,
         setAuth: true,
-        setStatus: true
       },
-      outColAction: ['create', 'setStatus'],
+      outColAction: ['create'],
 
       myUuid: undefined,
 
