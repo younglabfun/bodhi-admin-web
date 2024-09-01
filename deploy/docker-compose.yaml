@@ -1,0 +1,9 @@
+version: '3.1'
+services:
+  admin:
+    image: admin-web
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - 8292:80
