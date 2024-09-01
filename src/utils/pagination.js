@@ -1,4 +1,4 @@
-
+import store from "@/store";
 /**
  * getActionColWidth
  * @param {*} actions 当前页所有操作，包含权限
@@ -54,7 +54,17 @@ export function statusStyleFilter(status) {
   return styleMap[status]
 }
 
-// todo check action permission
 export function checkPermission(obj, actions) {
-  return actions
+  var permission = []
+  if (store.getters.uuid === process.env.VUE_APP_MASTER){
+    // 超级管理员返回页面静态权限配置
+    return actions
+  } else {
+    const permissions = store.getters.permissions
+    for ( var act in actions) {
+      var objAct = obj === '' ? act : obj + ':' + act
+      permission[act] = !permissions ? false : permissions.indexOf(objAct) > -1
+    }
+  }
+  return permission
 }

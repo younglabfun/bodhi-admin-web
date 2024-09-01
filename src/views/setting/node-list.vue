@@ -2,23 +2,23 @@
   <div class="app-container">
     <el-row :gutter="20">
       <el-col :span="24">
-        <el-tabs v-model="activeTab" tab-position="left" stretch addable @edit="handleAddGroup" @tab-click="handleTabClick">
+        <el-tabs v-model="activeTab" tab-position="left" stretch :addable="actions.create" @edit="handleAddGroup" @tab-click="handleTabClick">
           <el-tab-pane v-for="item in groups" :key="item.id" :label="item.title" :name="item.name">
             <span slot="label">{{ item.title }}</span>
             <div class="filter-container">
               <div class="filter-left">
                 <h2>{{ item.title }}</h2>
-                <el-button v-if="item.id != 0" type="text" icon="el-icon-edit" @click="handleEditGroup(item.id)">编辑</el-button>
-                <el-button v-if="item.id != 0" type="text" icon="el-icon-delete" @click="handleRemoveGroup(item.id)">删除</el-button>
+                <el-button v-if="item.id != 0 && actions.edit" type="text" icon="el-icon-edit" @click="handleEditGroup(item.id)">编辑</el-button>
+                <el-button v-if="item.id != 0 && actions.edit" type="text" icon="el-icon-delete" @click="handleRemoveGroup(item.id)">删除</el-button>
               </div>
               <div class="filter-right">
-              <el-button type="success" size="small" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handleCreate">
+              <el-button v-if="actions.create" type="success" size="small" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handleCreate">
                 添加
               </el-button>
-              <el-button type="primary" size="small" class="filter-item" icon="el-icon-receiving" style="margin-left:5px" @click="handleMove">
+              <el-button v-if="actions.edit" type="primary" size="small" class="filter-item" icon="el-icon-receiving" style="margin-left:5px" @click="handleMove">
                 移动分组
               </el-button>
-              <el-button type="danger" size="small" class="filter-item" icon="el-icon-delete" style="margin-left:5px" @click="handleBatchRemove">
+              <el-button v-if="actions.remove" type="danger" size="small" class="filter-item" icon="el-icon-delete" style="margin-left:5px" @click="handleBatchRemove">
                 批量删除
               </el-button>
               </div>
@@ -29,13 +29,13 @@
               highlight-current-row
               tripe fit @selection-change="handleSelectionChange"
             >
-              <el-table-column align="center" type="selection" width="45" />
+              <el-table-column v-if="actions.edit" align="center" type="selection" width="45" />
               <el-table-column align="center" label="ID" width="95">
                 <template slot-scope="{row}">
                   {{ row.id }}
                 </template>
               </el-table-column>
-              <el-table-column label="名称" width="150">
+              <el-table-column label="名称" width="220">
                 <template slot-scope="{row}">
                   {{ row.name }} <el-tag size="mini">{{ row.funcCode }}</el-tag>
                 </template>

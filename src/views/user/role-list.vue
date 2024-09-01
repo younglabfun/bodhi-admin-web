@@ -14,7 +14,7 @@
         </el-button>
       </div>
       <div class="filter-right">
-        <el-button size="small" type="success" class="filter-item" icon="el-icon-edit" @click="handleCreate">
+        <el-button v-if="actions.create" size="small" type="success" class="filter-item" icon="el-icon-edit" @click="handleCreate">
           添加
         </el-button>
       </div>
@@ -31,7 +31,7 @@
           <copy-button :copy-data="row.roleUuid" />
         </template>
       </el-table-column>
-      <el-table-column label="角色" width="280px">
+      <el-table-column label="角色" width="200px">
         <template slot-scope="{row}">
           <span>{{ row.name }}</span>
         </template>
@@ -43,16 +43,11 @@
       </el-table-column>
       <el-table-column label="状态" width="80" align="center">
         <template slot-scope="{row}">
-          <el-switch v-if="actions.setStatus" :disabled="isDisabled(row)" v-model="row.isEnabled" active-value="1" inactive-value="0"
+          <el-switch v-if="actions.setStatus" v-model="row.isEnabled" active-value="1" inactive-value="0"
             @change="handleSetStatus(row)" />
           <el-tag v-if="!actions.setStatus" :type="row.isEnabled | statusStyleFilter" size="small">
             {{ row.isEnabled | statusFilter }}
           </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="备注" prop="remark" min-width="230px" :show-overflow-tooltip="true">
-        <template slot-scope="{row}">
-          <span>{{ row.remark || '-' }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -69,10 +64,10 @@
       </el-table-column>
       <el-table-column v-if="actionColWidth != 0" label="操作" fixed="right" align="center" :width="actionColWidth">
         <template slot-scope="{row}">
-          <el-button v-if="actions.edit" :disabled="isDisabled(row)" type="primary" size="mini" @click="handleEdit(row)">
+          <el-button v-if="actions.edit" type="primary" size="mini" @click="handleEdit(row)">
             编辑
           </el-button>
-          <el-button v-if="actions.remove" :disabled="isDisabled(row)" type="danger" size="mini" @click="handleRemove(row)">
+          <el-button v-if="actions.remove" type="danger" size="mini" @click="handleRemove(row)">
             删除
           </el-button>
         </template>
@@ -146,6 +141,7 @@ export default {
       this.listLoading = true
       this.list = []
       listRole(this.listReq).then(resp => {
+        console.log('resp', resp)
         var list = resp.data.list
         this.total = resp.data.total
         for (var i in list) {
@@ -183,7 +179,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
       }).then(async() => {
-        await removeRole(row.userUuid).then(resp => {
+        await removeRole(row.roleUuid).then(resp => {
           var {message, data} = resp
           var notifyType = 'error'
           if (data.affected) {

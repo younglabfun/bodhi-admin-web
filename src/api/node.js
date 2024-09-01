@@ -55,6 +55,13 @@ export function listGroup() {
   })
 }
 
+export function listNode() {
+  var api = getApi('node')
+  return request({
+    url: api + '/get-list-data',
+    method: 'get'
+  })
+}
 export function insert(obj, data) {
   var api = getApi(obj)
   return request({

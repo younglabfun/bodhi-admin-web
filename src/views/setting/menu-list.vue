@@ -7,7 +7,7 @@
       </el-select>
       </div>
       <div class="filter-right">
-        <el-button type="success" size="small" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handleCreate">
+        <el-button v-if="actions.create" type="success" size="small" class="filter-item" icon="el-icon-edit" style="margin-left:5px" @click="handleCreate">
           添加
         </el-button>
       </div>

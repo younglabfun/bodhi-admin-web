@@ -44,12 +44,12 @@ export const constantRoutes = [
     component: () => import('@/views/error-page/401'),
     hidden: true
   },
-  {
-    path: '/404',
-    name: 'error_404',
-    component: () => import('@/views/error-page/404'),
-    hidden: true
-  },
+  // {
+  //   path: '/404',
+  //   name: 'error_404',
+  //   component: () => import('@/views/error-page/404'),
+  //   hidden: true
+  // },
 
   // {
   //   path: '/',

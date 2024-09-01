@@ -14,7 +14,7 @@
         </el-button>
       </div>
       <div class="filter-right">
-        <el-button size="small" type="success" class="filter-item" icon="el-icon-edit" @click="handleCreate">
+        <el-button v-if="actions.create" size="small" type="success" class="filter-item" icon="el-icon-edit" @click="handleCreate">
           添加
         </el-button>
       </div>
@@ -81,6 +81,9 @@
           <el-button v-if="actions.edit" :disabled="isDisabled(row)" type="primary" size="mini" @click="handleEdit(row)">
             编辑
           </el-button>
+          <el-button v-if="actions.setAuth" :disabled="isDisabled(row)" type="success" size="mini" @click="handleAuth(row)">
+            授权
+          </el-button>
           <el-button v-if="actions.setPwd" :disabled="isDisabled(row)" type="warning" size="mini" @click="handleSetPwd(row)">
             修改密码
           </el-button>
@@ -99,6 +102,7 @@
     />
     <user-form ref="userForm" @update="fetchData" />
     <pwd-form ref="pwdForm" />
+    <role-selector ref="roleSelector" />
   </div>
 </template>
 
@@ -110,10 +114,11 @@ import copyButton from '@/components/CopyButton'
 import pagination from '@/components/Pagination'
 import userForm from './components/user-form.vue'
 import pwdForm from './components/pwd-form.vue'
+import roleSelector from './components/role-selector.vue'
 
 export default {
   name: 'UserList',
-  components: { pagination, copyButton, userForm, pwdForm },
+  components: { pagination, copyButton, userForm, pwdForm, roleSelector },
   filters: {
     statusFilter(status) {
       return page.statusFilter(status)
@@ -131,12 +136,13 @@ export default {
   },
   data() {
     return {
-      obj: 'menu',
+      obj: 'user',
       actions: {
         create: true,
         edit: true,
         remove: true,
         setPwd: true,
+        setAuth: true,
         setStatus: true
       },
       outColAction: ['create', 'setStatus'],
@@ -188,6 +194,9 @@ export default {
         return false
       }
       this.$refs['userForm'].showDialog('update', row.userUuid)
+    },
+    handleAuth(row){
+      this.$refs['roleSelector'].showDialog(row.userUuid)
     },
     handleSetStatus(row) {
       setUserStatus(row.userUuid).then( (resp) => {

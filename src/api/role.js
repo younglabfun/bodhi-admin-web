@@ -32,7 +32,7 @@ export function setRoleStatus(uuid) {
   return request({
     url: roleApi + '/update-status',
     method: 'post',
-    data: { uuid: uuid }
+    data: { uuid: uuid, status: 'IsEnabled' }
   })
 }
 

@@ -58,3 +58,26 @@ export function getUser(uuid) {
   })
 }
 
+// user role
+export function getUserRoles(uuid) {
+  return request({
+    url: userApi + '/get-user-roles/' + uuid,
+    method: 'get'
+  })
+}
+
+export function setUserRole(userUuid, roleUuid) {
+  return request({
+    url: userApi + '/set-user-role',
+    method: 'post',
+    data: { userUuid: userUuid, roleUuid: roleUuid }
+  })
+}
+
+export function removeUserRole(id) {
+  return request({
+    url: userApi + '/remove-user-role',
+    method: 'post',
+    data: { id: id }
+  })
+}

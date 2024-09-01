@@ -1,5 +1,5 @@
 <template>
-  <el-dialog :visible.sync="dialogVisible" :title="dialogTitle[dialogStatus]" width="50%">
+  <el-dialog :visible.sync="dialogVisible" :title="dialogTitle[dialogStatus]" width="60%">
     <el-form ref="dataForm" :rules="rules" :model="role" label-position="right" label-width="100px">
       <el-row>
         <el-col :span="14">
@@ -9,14 +9,17 @@
         </el-col>
         <el-col :span="22">
           <el-form-item label="简介" prop="description">
-            <el-input type="description" :autosize="{ minRows: 2, maxRows: 4 }" v-model="role.description"
+            <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" v-model="role.description"
               placeholder="请输入简介" />
           </el-form-item>
         </el-col>
         <el-col :span="22">
-          <el-form-item label="系统功能" prop="authorize">
-            <el-input v-model="role.authorize" type="hidden" style="width:1px;height:1px;" />
-            <node-selector ref="nodeSelector" />
+          <el-form-item label="功能" prop="authorize">
+            <node-selector
+              ref="nodeSelector"
+              :auth="role.authorizeJson"
+              @authChanged="handleAuthChanged"
+            />
           </el-form-item>
         </el-col>
       </el-row>
@@ -33,11 +36,11 @@
 </template>
 
 <script>
-import { getUser, insertUser, updateUser } from '@/api/user';
+import { getRole, insertRole, updateRole } from '@/api/role';
 import nodeSelector from '@/views/setting/components/node-selector.vue';
 
 export default {
-  name: 'UserForm',
+  name: 'RoleForm',
   components: {
     nodeSelector
   },
@@ -75,7 +78,8 @@ export default {
         name: [
           { required: true, message: '角色是必填项', trigger: 'blur' }
         ],
-        authorize: [
+        authorizeJson: [
+          { required: true, message: '功能是必选项', trigger: 'blur' },
           { trigger: 'blur', validator: checkAuth }
         ]
       }
@@ -92,6 +96,9 @@ export default {
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
+      setTimeout(() => {
+        this.$refs.nodeSelector.initSelector()
+      }, 1*200)
 
       this.dialogVisible = true
     },
@@ -100,24 +107,22 @@ export default {
         roleUuid: undefined,
         name: '',
         description: '',
-        authorize: ''
+        authorizeJson: ''
       })
+    },
+    handleAuthChanged(authJson){
+      this.role.authorizeJson = authJson
     },
     async initData() {
-      await getUser(this.user.userUuid).then((resp) => {
-        this.user = Object.assign({}, resp.data)
+      await getRole(this.role.roleUuid).then((resp) => {
+        this.role = Object.assign({}, resp.data)
       })
-    },
-    handleChange() {
-      this.initParentOption()
     },
     createData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          var params = Object.assign({}, this.user)
-          delete params.confirmPassword
-          console.log('user', this.user, params)
-          insertUser(params).then( (resp) => {
+          var params = Object.assign({}, this.role)
+          insertRole(params).then( (resp) => {
             const {message, data} = resp
             if (data.affected) {
               this.$notify({
@@ -139,8 +144,8 @@ export default {
     updateData() {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
-          var params = Object.assign({}, this.user)
-          updateUser(params).then((resp) => {
+          var params = Object.assign({}, this.role)
+          updateRole(params).then((resp) => {
             const { message, data } = resp
             if (data.affected) {
               this.$notify({

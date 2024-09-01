@@ -1,42 +1,36 @@
 <template>
   <el-row>
-    <el-col :span="24" class="grid-content bg-gray actionCount">
-      <strong>全部功能 [ <em ref="actionTotal">{{ appActions.length }}</em> ] </strong>
-      <strong>授权功能 [ <em ref="authorizeCount" class="authorizeCount">{{ selectedActionList.length }}</em> ]</strong>
+    <el-col :span="24" class="count">
+      <strong>全部功能 [ <em ref="nodeTotal">{{ nodes.length }}</em> ] </strong>
+      <strong>授权功能 [ <em ref="authorizeCount" class="authCount">{{ authData.length }}</em> ]</strong>
       <span style="margin-left: 30px;">
-        <el-checkbox v-model="checkAll" :disabled="checkAllDisabled" :indeterminate="isIndeterminate" @change="handlerCheckAll">
+        <el-checkbox v-model="groupStatus" :disabled="checkAllDisabled" :indeterminate="groupInStatus" @change="handleCheckGroupAll">
           全选
         </el-checkbox>
-        <el-checkbox v-model="checkAllAction" :disabled="checkAllDisabled" :indeterminate="isAllIndeterminate" @change="handlerCheckAllActions">
+        <el-checkbox v-model="allStatus" :disabled="checkAllDisabled" :indeterminate="allInStatus" @change="handleCheckAll">
           全选所有功能
         </el-checkbox>
       </span>
     </el-col>
-    <el-col :span="24" style="margin-top:20px">
-      <el-skeleton :animated="actionLoad" :loading="skeletonLoad" :rows="6" class="actionskeleton" />
-      <el-tabs v-model="activeTab" tab-position="right" :stretch="true" @tab-click="handlerTabClick">
+    <el-col :span="24" class="selector-content">
+      <el-tabs v-model="activeGroup" tab-position="right" :stretch="true" @tab-click="handleTabClick">
         <el-tab-pane
-          v-for="item in actionGroups"
+          v-for="item in nodeGroups"
           :key="item.name"
           :name="item.name"
         >
           <span slot="label">{{ item.title }}
-            <em class="tabCount">
-              <strong v-show="item.selected !== 0">{{ item.selected }}</strong>
-              <sub v-show="item.selected !== 0 && item.selected != item.actions.length" class="slash">/</sub>
-              <em v-show="item.selected != item.actions.length">{{ item.actions.length }}</em>
+            <em class="groupCount">
+              <strong v-if="item.selected !== 0">{{ item.selected }}</strong>
+              <sub v-if="item.selected !== 0 && item.selected != item.nodes.length" class="slash">/</sub>
+              <em v-if="item.selected != item.nodes.length">{{ item.nodes.length }}</em>
             </em>
           </span>
-          <el-checkbox-group v-model="selectedAction" @change="onSelectedChange">
-            <el-row>
-              <el-col v-for="action in item.actions" :key="action.id">
-                <el-checkbox
-                  :label="action.id"
-                >
-                  <div class="grid-content bg-gray-light action-content">
-                    {{ action.name }}
-                    <span v-if="action.description">( {{ action.description }} )</span>
-                  </div>
+          <el-checkbox-group v-model="selectedNodes" @change="handleSelectedChanged">
+            <el-row :gutter="0" class="node-list">
+              <el-col :span="22" v-for="node in item.nodes" :key="node.id">
+                <el-checkbox :label="node.id"> {{ node.name }}
+                <span v-if="node.description" class="node-desc">( {{ node.description }} )</span>
                 </el-checkbox>
               </el-col>
             </el-row>
@@ -48,346 +42,260 @@
 </template>
 
 <script>
-import store from '@/store'
 import { mergeArray } from '@/utils'
+import { listGroup, listNode } from '@/api/node';
 
 export default {
-  name: 'ActionSelector',
+  name: 'NodeSelector',
   props: {
-    // mode: {
-    //   type: String,
-    //   default: 'template'
-    // },
-    // appUuid: {
-    //   type: String,
-    //   default: ''
-    // },
-    authorize: { // 已经获取的授权
+    auth: { // 已经获取的授权
       type: String,
       default: ''
     },
-    // orgAuthActions: { // 租户获得授权的应用
-    //   type: Array,
-    //   default: function(data) {
-    //     return data
-    //   }
-    // }
   },
   data() {
     return {
-      appActions: [], // 应用的所有功能
-      appActionGroups: [], // 应用的所有分组
-      actions: [], // 当前分组的功能
-      actionGroups: [], // 筛选以后的应用分组
-      actionIds: [], // 当前分组的功能的id
-      selectedActionList: [], // 所有被选中功能
-      selectedAction: [], // 当前分组被选中功能
-      authorizeJson: '',
-      activeTab: '', // action group name
-      activeTabIndex: 0, // actionGroups index
-      activeTabId: 0, // action group id
+      nodes:[],
+      nodeGroups: [],
+
+      authData: [], // 已被授权node
+      selectedNodes: [], // 分组中被选中node
+
+      activeGroup: '',
+      activeIndex: undefined,
+      groupNodes: [],
+      groupNodeIds: [],
 
       checkAllDisabled: true, // 全选按钮disabled
-      isIndeterminate: false, // 当前分组全选checkbox不确定状态
-      isAllIndeterminate: false, // 所有功能全选checkbox不确定状态
-      checkAll: false, // 当前分组选中状态
-      checkAllAction: false, // 所有功能全选选中状态
-      actionLoad: false, // 骨架屏加载动画
-      skeletonLoad: true // 是否显示骨架屏
+      allStatus: false, // 所有功能全选选中状态
+      allInStatus: false, // 所有功能全选checkbox不确定状态
+
+      groupStatus: false, // 当前分组选中状态
+      groupInStatus: false, // 当前分组全选checkbox不确定状态
     }
   },
-  watch: {
-    // appUuid: function(val) {
-    //   this.handlerAppChange(val)
-    // },
-    authorize: function(val) {
-      this.initAuthorize(val)
+  watch:{
+    auth: function(val) {
+      this.initAuthData(val)
     }
   },
   methods: {
-    handlerAppChange(appUuid) {
-      this.initActionData()
-      this.getActionData(appUuid)
-      // this.selectedActionList = []
-      // this.handlerCheckAllActions(false)
+    initSelector(){
+      this.setDefault()
+      this.initNodeData()
     },
-    initActionData() {
-      // console.log('init action data')
+    async initNodeData() {
+      await this.fetchNode()
+      await this.fetchNodeGroup()
+      this.setNodeData()
+    },
+    setDefault(){
+      // 数据
+      this.selectedNodes = []
+
+      // 页面状态
       this.checkAllDisabled = true
-      this.isIndeterminate = false
-      this.isAllIndeterminate = false
-      this.checkAll = false
-      this.checkAllAction = false
-      this.actionLoad = true
-      this.skeletonLoad = true
-      this.appActionGroups = []
-      this.appActions = []
-      this.actionGroups = []
+      this.allStatus = false
+      this.groupStatus = false
     },
-    async getActionData(appUuid) {
-      if (appUuid === '') {
-        this.actionLoad = false
-        return false
-      }
-      // 获取该应用所有功能
-      await this.getActions(appUuid)
-      // 获取该应用所有功能分组
-      await this.getActionGroup(appUuid)
-
-      var skeletionShow = true
-      if (this.appActions.length !== 0) {
-        this.setActionData()
-        this.setGroupActionData()
-        skeletionShow = false
-      }
-
-      this.skeletonLoad = skeletionShow
-      this.actionLoad = false
-    },
-    // 获取分组功能在所有被选中功能中的统计
-    getSelectedCount(ids) {
-      var count = 0
-      if (this.selectedActionList.length !== 0) {
-        for (const i in ids) {
-          if (this.selectedActionList.indexOf(ids[i].id) > -1) count++
+    initAuthData() {
+      var authData = []
+      if (this.auth.length != 0) {
+        try {
+          authData = JSON.parse(this.auth)
+        } catch (e) {
+          console.log('auth is invalid json data', this.auth)
         }
+      }
+      console.log('initAuthData',this.auth)
+      this.authData = authData
+    },
+    setNodeData(){
+      for (var i = 0; i < this.nodeGroups.length; i++) {
+        if (i === 0){
+          this.activeGroup = this.nodeGroups[i].name
+          this.activeIndex = i
+        }
+        this.nodes.forEach(row => {
+          if (row.isEnabled == 1 && row.groupId === this.nodeGroups[i].id) {
+            this.nodeGroups[i].nodes.push(row)
+          }
+        })
+        this.nodeGroups[i].selected = this.getSelectedCount(this.nodeGroups[i].nodes)
+      }
+      // console.log(this.activeIndex)
+      if (this.activeIndex != undefined) {
+        this.initGroupNodeData()
+      }
+    },
+    getSelectedCount(nodes) {
+      var count = 0
+      var ids = this.getNodeIds(nodes)
+      if (this.authData.length != 0) {
+        ids.forEach(id => {
+          if (this.authData.indexOf(id) > -1) {
+            count++
+          }
+        })
       }
       return count
     },
-    // 获取应用所有功能
-    async getActions(appUuid) {
-      this.appActions = await store.dispatch('action/getActionsByAppUuid', appUuid)
-        .then((response) => {
-          if (response === null) {
-            this.$notify({
-              message: '该应用尚未添加功能数据，无法进行授权操作',
-              type: 'warning',
-              duration: 2000
-            })
-            this.actionLoad = false
-            return []
-          }
-          return response
-        })
+    async fetchNode(){
+      this.nodes = []
+      await listNode().then(resp => {
+        var list = resp.data.list
+        this.nodes = list
+      })
     },
-    // 获取应用功能分组
-    async getActionGroup(appUuid) {
-      this.appActionGroups = await store.dispatch('action/getActionGroupsByAppUuid', appUuid)
-    },
-    // 从租户授权应用中筛选设置可以授权给角色的操作
-    setActionData() {
-      // console.log('set action')
-      if (this.mode !== 'template') {
-        if (typeof this.orgAuthActions !== 'undefined' && this.orgAuthActions.length !== 0) {
-          var authActions = []
-          for (const i in this.appActions) {
-            var action = this.appActions[i]
-            if (this.orgAuthActions.indexOf(action.id) < 0) continue
-            authActions.push(action)
-          }
-          this.appActions = authActions
+    async fetchNodeGroup(){
+      this.nodeGroups = []
+      await listGroup().then(resp => {
+        var list = resp.data.list
+        for (var i = 0; i < list.length; i++){
+          var item = list[i]
+          item.nodes = []
+          this.nodeGroups.push(item)
         }
-      }
+      })
+      this.nodeGroups.unshift({ id: 0, title: '未分组', name: 'none', nodes: [] })
     },
-    // 分组显示应用数据
-    setGroupActionData() {
-      // console.log('set group action')
-      var actionCount = 0
-      if (this.appActionGroups.length > 0) {
-        for (const i in this.appActionGroups) {
-          var group = this.appActionGroups[i]
-          group.actions = []
-          for (const j in this.appActions) {
-            if (group.id !== this.appActions[j].groupId) continue
-            group.actions.push(this.appActions[j])
-            actionCount++
-          }
-          if (group.actions.length === 0) continue
-          group.selected = this.getSelectedCount(group.actions)
-          this.actionGroups.push(group)
-        }
-      }
-      // 未分组应用合并为单独的分组
-      // console.log('acount', actionCount, this.appActions.length)
-      if (actionCount !== this.appActions.length) {
-        var customeGroup = { id: 0, title: '未分组', name: 'unknown' }
-        customeGroup.actions = []
-        for (const m in this.appActions) {
-          if (this.appActions[m].groupId !== customeGroup.id) continue
-          customeGroup.actions.push(this.appActions[m])
-        }
-        customeGroup.selected = this.getSelectedCount(customeGroup.actions)
-        this.actionGroups.push(customeGroup)
-      }
-      // 显示第一tab页数据
-      if (this.actionGroups.length > 0) {
-        this.initTabActionData()
-      }
+    // 切换tab
+    handleTabClick(tab) {
+      this.activeIndex = tab.index
+      this.initGroupNodeData()
     },
-    // tab页点击事件
-    handlerTabClick(tab, event) {
-      // console.log('tab click', tab)
-      this.activeTabIndex = tab.index
-      this.initTabActionData()
-    },
-    // 初始化tab数据
-    initTabActionData() {
-      // console.log('init tab data')
-      this.activeTab = this.actionGroups[this.activeTabIndex].name
-      this.activeTabId = this.actionGroups[this.activeTabIndex].id
-      this.actions = this.actionGroups[this.activeTabIndex].actions
-      this.actionIds = this.getActionIds(this.actions)
-
-      // 所有选择功能和当前分组功能的交集 即为当前分组中被选中的功能
-      this.selectedAction = this.getSelectedActions()
-      this.onSelectedChange(this.selectedAction)
+    // 初始化当前分组的node数据
+    initGroupNodeData(){
+      // 当前分组的nodes
+      this.groupNodes = this.nodeGroups[this.activeIndex].nodes
+      // 获取当前分组被选中的node
+      this.selectedNodes = this.getGroupSelectedNode()
+      this.handleSelectedChanged(this.selectedNodes)
+      // 释放禁用状态
       this.checkAllDisabled = false
     },
-    // 当前功能ID
-    getActionIds(actionData) {
-      var actions = []
-      for (const i in actionData) {
-        actions.push(actionData[i].id)
-      }
-      return actions
-    },
-    getSelectedActions() {
+    getGroupSelectedNode() {
       var selected = []
-      if (this.selectedActionList.length !== 0) {
-        for (const i in this.actionIds) {
-          var actionId = this.actionIds[i]
-          if (this.selectedActionList.indexOf(actionId) > -1) {
-            selected.push(actionId)
+      if (this.authData.length != 0) {
+        var groupNodeIds = this.getNodeIds(this.groupNodes)
+        groupNodeIds.forEach(id => {
+          if (this.authData.indexOf(id) > -1) {
+            selected.push(id)
           }
-        }
+        })
       }
       return selected
     },
-    // 设置表单json
-    setAuthorizeJson() {
-      // 删掉当前分组的功能 再合并被选中的
-      var allSelectedActionIds = this.selectedActionList
-      var groupActionIds = this.actionIds
-      var minus = allSelectedActionIds.filter(function(v) { return groupActionIds.indexOf(v) === -1 })
-      this.selectedActionList = mergeArray(minus, this.selectedAction)
-      this.authorizeJson = JSON.stringify(this.selectedActionList)
-      // console.log('authorize: ', this.authorizeJson)
-      this.$emit('authorizeChanged', this.authorizeJson)
+    getNodeIds(nodes){
+      var ids = []
+      nodes.forEach(row => {
+        ids.push(row.id)
+      })
+      return ids
     },
-    initAuthorize(authJson) {
-      var authActions = []
-      if (authJson.length !== 0) {
-        try {
-          authActions = JSON.parse(authJson)
-        } catch (d) {
-          console.log('json parse error', authJson)
-        }
-      }
-      this.authorizeJson = authJson
-      this.selectedActionList = authActions
-    },
-    // 单选 checkboxgroup change
-    onSelectedChange(value) {
-      // console.log('on change', value)
-      const checkedCount = value.length
-      this.actionGroups[this.activeTabIndex].selected = checkedCount
-      this.checkAll = checkedCount === this.actionIds.length
-      this.isIndeterminate = checkedCount > 0 && checkedCount < this.actionIds.length
-      this.setAuthorizeJson()
-      // console.log('check len ', this.selectedActionList.length, this.appActions.length)
-      this.isAllIndeterminate = this.selectedActionList.length > 0 && this.selectedActionList.length < this.appActions.length
-      this.checkAllAction = this.selectedActionList.length === this.appActions.length
-    },
-    // 全选当前分组的应用功能
-    handlerCheckAll(checked) {
-      this.selectedAction = checked ? this.actionIds : []
-      this.actionGroups[this.activeTabIndex].selected = this.selectedAction.length
-      this.isIndeterminate = false
+    // 更新选择状态
+    handleSelectedChanged(value){
+      // 更新授权
+      this.setAuthData()
 
-      this.setAuthorizeJson()
+      const checkedLen = value.length
+      // 更新当前分组选中数量
+      this.nodeGroups[this.activeIndex].selected = checkedLen
+      // 分组全选按钮状态
+      this.groupStatus = checkedLen === this.groupNodes.length
+      this.groupInStatus = checkedLen > 0 && checkedLen < this.groupNodes.length
+      // 全选按钮状态
+      this.setCheckAllStatus()
+    },
+    setCheckAllStatus() {
+      const authLen = this.authData.length
+      this.allStatus = authLen === this.nodes.length
+      this.allInStatus = authLen > 0 && authLen < this.nodes.length
+    },
+    setAuthData() {
+      var groupNodeIds = this.getNodeIds(this.groupNodes)
+      // 移除授权信息中该组所有nodes
+      var diffSet = this.authData.filter(function(v) { return groupNodeIds.indexOf(v) === -1})
+      // 将本组已选中的node加入授权信息
+      this.authData = mergeArray(diffSet, this.selectedNodes)
 
-      // 设置全选所有多选框状态
-      // console.log('sal--', this.selectedActionList.length, this.appActions.length)
-      this.isAllIndeterminate = this.selectedActionList.length > 0 && this.selectedActionList.length < this.appActions.length
-      this.checkAllAction = this.selectedActionList.length === this.appActions.length
+      // console.log('set auth data ', this.authData)
+      this.$emit('authChanged', JSON.stringify(this.authData))
     },
-    // 全选当前应用的所有功能
-    handlerCheckAllActions(checked) {
-      // console.log('check all actions ', checked)
-      // 全选
-      this.selectedAction = checked ? this.actionIds : []
-      this.checkAll = checked
-      this.isIndeterminate = false
-      // 全选所有
-      this.selectedActionList = checked ? this.getActionIds(this.appActions) : []
-      this.checkAllAction = checked
-      this.isAllIndeterminate = false
-      this.setAuthorizeJson()
-      this.setAllGroupSelected(checked)
+    handleCheckGroupAll(checked){
+      // 本组数据全选状态
+      this.selectedNodes = checked ? this.getNodeIds(this.groupNodes) : []
+      this.nodeGroups[this.activeIndex].selected = this.selectedNodes.length
+      this.groupInStatus = false
+
+      // 更新授权
+      this.setAuthData()
+      this.setCheckAllStatus()
     },
-    setAllGroupSelected(status) {
-      for (const i in this.actionGroups) {
-        this.actionGroups[i].selected = status ? this.actionGroups[i].actions.length : 0
+    handleCheckAll(checked){
+      // 当前组更新选择状态
+      this.selectedNodes = checked ? this.getNodeIds(this.groupNodes) : []
+      // 更新所有组的选择统计
+      for (const i in this.nodeGroups){
+        this.nodeGroups[i].selected = checked ? this.nodeGroups[i].nodes.length : 0
       }
-    }
+
+      this.groupStatus = checked
+      this.groupInStatus = false
+      this.allStatus = checked
+      this.allInStatus = false
+      // 更新授权
+      this.authData = checked ? this.getNodeIds(this.nodes) : []
+      this.setAuthData()
+    },
   }
 }
 </script>
 
-<style>
-.actionskeleton .el-skeleton {
-  position: relative;
-}
-.grid-content {
+<style lang="scss" scoped>
+.count {
   border-radius: 4px;
   padding-left: 20px;
   min-height: 36px;
-}
-.actionCount {
   color: #666666;
+  background: #efefef;
+  strong {
+    font-weight: 400;
+    margin-right: 10px;
+  }
+  .authCount {
+    color: #009900;
+  }
 }
-.actionCount strong {
-  font-weight: 400;
-  margin-right: 10px;
+.selector-content {
+  margin-top: 20px;
+  height: 200px;
+  overflow: auto;
 }
-.authorizeCount {
-  color: #009900;
-}
-.tabCount {
-  margin-left: 10px;
+.groupCount{
   font-size: 10px;
-  float:right;
+  position: absolute;
+  right: 0;
+  strong {
+    font-weight: 100;
+    color: #009900;
+  }
+  em {
+    color: #808080;
+  }
+  .slash{
+    color: #cccccc;
+    padding: 0 2px;
+  }
 }
-.tabCount em {
-  color: #999999;
-}
-.slash{
-  color: #cccccc;
-  padding: 0 2px;
-}
-.tabCount strong {
-  font-weight: 100;
-  color: #009900;
-}
-.action-content {
+.node-list {
   line-height: 36px;
   padding: 0 10px;
   margin: 5px 0;
+  .node-desc {
+    margin-left: 10px;
+    color: #999999;
+  }
 }
 
-.action-content span {
-  margin-left: 10px;
-  color: #999999;
-}
-
-.bg-gray {
-  background: #efefef;
-}
-
-.bg-gray-light {
-  background: #f4f4f4;
-}
-.el-tab-pane {
-  overflow: auto;
-}
 </style>

@@ -5,6 +5,7 @@ const getters = {
   avatar: state => state.user.avatar,
   name: state => state.user.name,
   uuid: state => state.user.uuid,
+  permissions: state => state.user.permissions,
 
   // 动态路由数据
   routes: state => state.settings.routes

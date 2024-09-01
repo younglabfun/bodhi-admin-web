@@ -85,7 +85,6 @@ const actions = {
     return new Promise(( resolve, reject) => {
       getPermission().then( resp => {
         var permission = resp.data.permission
-        permission = ['all']
         commit('SET_PERMISSION', permission)
         resolve(permission)
       }).catch( error => {
