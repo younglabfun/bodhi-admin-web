@@ -34,7 +34,7 @@ export default {
   data() {
     const validatorPassword = (rule, value, callback) => {
       const valid = validPassword(value)
-      if (!valid) {
+      if (valid != true) {
         callback(new Error(valid))
       } else {
         callback()
@@ -42,7 +42,7 @@ export default {
     }
     const validatorConfirmPassword = (rule, value, callback) => {
       const valid = validConfirmPasswrod(value, this.params.password)
-      if (!valid) {
+      if (valid != true) {
         callback(new Error(valid))
       } else {
         callback()
@@ -55,12 +55,10 @@ export default {
       params: {},
       rules: {
         password: [
-          {required: true, message: '密码是必填项', trigger: 'blur'},
-          { trigger: 'blur', validator: validatorPassword }
+          { required: true, trigger: 'blur', validator: validatorPassword }
         ],
         confirmPassword: [
-          {required: true, message: '确认密码是必填项', trigger: 'blur'},
-          { trigger: 'blur', validator: validatorConfirmPassword }
+          { required: true, trigger: 'blur', validator: validatorConfirmPassword }
         ]
       }
     }

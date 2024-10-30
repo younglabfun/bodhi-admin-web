@@ -55,7 +55,7 @@ export default {
   data() {
     const validatorUserName = (rule, value, callback) => {
       const valid = validUsername(value, 4, 12)
-      if (!valid) {
+      if (valid != true) {
         callback(new Error(valid))
       } else {
         callback()
@@ -63,7 +63,7 @@ export default {
     }
     const validatorPassword = (rule, value, callback) => {
       const valid = validPassword(value)
-      if (!valid) {
+      if (valid != true) {
         callback(new Error(valid))
       } else {
         callback()
@@ -71,7 +71,7 @@ export default {
     }
     const validatorConfirmPassword = (rule, value, callback) => {
       const valid = validConfirmPasswrod(value, this.user.password)
-      if (!valid) {
+      if (valid != true) {
         callback(new Error(valid))
       } else {
         callback()
@@ -93,20 +93,16 @@ export default {
       user: {},
       rules: {
         username: [
-          { required: true, message: '登录名是必填项', trigger: 'blur' },
-          { trigger: 'blur', validator: validatorUserName }
+          { required: true, trigger: 'blur', validator: validatorUserName }
         ],
         password: [
-          {required: true, message: '密码是必填项', trigger: 'blur'},
-          { trigger: 'blur', validator: validatorPassword }
+          { required: true, trigger: 'blur', validator: validatorPassword }
         ],
         confirmPassword: [
-          {required: true, message: '确认密码是必填项', trigger: 'blur'},
-          { trigger: 'blur', validator: validatorConfirmPassword }
+          { required: true, trigger: 'blur', validator: validatorConfirmPassword }
         ],
         email: [
-          {required: true, message: '确认密码是必填项', trigger: 'blur'},
-          { type: 'email', message: 'Email格式错误', trigger: 'blur' }
+          { required: true, type: 'email', message: 'Email格式错误', trigger: 'blur' }
         ],
         name: [
           { trigger: 'blur', validator: validatorName }],

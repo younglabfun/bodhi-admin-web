@@ -8,7 +8,7 @@
           </el-form-item>
         </el-col>
         <el-col :span="22">
-          <el-form-item label="新密码" prop="password">
+          <el-form-item label="新密码" prop="newPassword">
             <el-input type="password" v-model="params.newPassword" placeholder="请输入密码" show-password inline-message="true" />
           </el-form-item>
         </el-col>
@@ -39,15 +39,15 @@ export default {
   data() {
     const validatorPassword = (rule, value, callback) => {
       const valid = validPassword(value)
-      if (!valid) {
+      if (valid != true) {
         callback(new Error(valid))
       } else {
         callback()
       }
     }
     const validatorConfirmPassword = (rule, value, callback) => {
-      const valid = validConfirmPasswrod(value, this.params.password)
-      if (!valid) {
+      const valid = validConfirmPasswrod(value, this.params.newPassword)
+      if (valid != true) {
         callback(new Error(valid))
       } else {
         callback()
@@ -63,12 +63,10 @@ export default {
           {required: true, message: '原密码是必填项', trigger: 'blur'},
         ],
         newPassword: [
-          {required: true, message: '新密码是必填项', trigger: 'blur'},
-          { trigger: 'blur', validator: validatorPassword }
+          { required: true, trigger: 'blur', validator: validatorPassword }
         ],
         confirmPassword: [
-          {required: true, message: '确认密码是必填项', trigger: 'blur'},
-          { trigger: 'blur', validator: validatorConfirmPassword }
+          { required: true, trigger: 'blur', validator: validatorConfirmPassword }
         ]
       }
     }

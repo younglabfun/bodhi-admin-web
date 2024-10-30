@@ -33,10 +33,10 @@ router.beforeEach(async(to, from, next) => {
       } else {
         try {
           const permission = await store.dispatch('user/getPermission')
-          if ( permission !== null ) {
+          if ( permission.length !== 0 ) {
             // get user info
             await store.dispatch('user/getAccount')
-            console.log('len ', store.getters.routes)
+            // console.log('len ', store.getters.routes)
 
             await store.dispatch('settings/initRoute').then( () => {
               router.addRoutes(store.getters.routes)
@@ -45,7 +45,7 @@ router.beforeEach(async(to, from, next) => {
             next({ ...to, replace: true })
           } else {
             Message({
-              message: "禁止访问！",
+              message: "没有访问权限！",
               type: "warning",
             });
             await store.dispatch("user/resetToken")
