@@ -60,3 +60,11 @@ export function setStatus(id, status) {
   })
 }
 
+
+export function remove(data) {
+  return request({
+    url: menuApi + '/remove',
+    method: 'post',
+    data
+  })
+}

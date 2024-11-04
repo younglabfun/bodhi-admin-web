@@ -87,7 +87,7 @@
 
 <script>
 import * as page from '@/utils/pagination'
-import { getMenuTreeData, setStatus } from '@/api/menu'
+import { getMenuTreeData, setStatus, remove } from '@/api/menu'
 import menuForm from './components/menu-form.vue'
 
 export default {
@@ -171,6 +171,27 @@ export default {
     },
     handleSetShow(row) {
       this.updateStatus(row, 'IsShow')
+    },
+    handleRemove(row){
+      this.$confirm('确认删除该数据?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+      }).then(async() => {
+        var params = {id: row.id}
+        await remove(params).then(resp => {
+          var {message, data} = resp
+          var notifyType = 'error'
+          if (data.affected) {
+            notifyType =  'success'
+            this.groupId = 0
+          }
+          this.$notify({
+            message: message,
+            type: notifyType
+          })
+          this.fetchData()
+        })
+      })
     },
     updateStatus(row, status) {
       setStatus(row.id, status).then( (resp) => {
