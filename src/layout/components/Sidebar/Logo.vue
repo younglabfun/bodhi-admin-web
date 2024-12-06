@@ -6,14 +6,17 @@
         <h1 v-else class="sidebar-title">{{ title }} </h1>
       </router-link>
       <router-link v-else key="expand" class="sidebar-logo-link" to="/">
-        <img v-if="logo" :src="logo" class="sidebar-logo">
-        <h1 class="sidebar-title">{{ title }} </h1>
+        <img v-if="logo" :src="name" class="sidebar-logo">
+        <h1 v-if="title" class="sidebar-title">{{ title }} </h1>
       </router-link>
     </transition>
   </div>
 </template>
 
 <script>
+import bodhiAdmin from "@/assets/bodhi-admin.png"
+import logo from "@/assets/bodhi-admin-logo.png"
+
 export default {
   name: 'SidebarLogo',
   props: {
@@ -24,8 +27,9 @@ export default {
   },
   data() {
     return {
-      title: 'Vue Admin Template',
-      logo: 'https://wpimg.wallstcn.com/69a1c46c-eb1c-4b46-8bd4-e9e686ef5251.png'
+      title: '',
+      name: bodhiAdmin,
+      logo: logo
     }
   }
 }
@@ -55,7 +59,7 @@ export default {
     width: 100%;
 
     & .sidebar-logo {
-      width: 32px;
+      // width: 32px;
       height: 32px;
       vertical-align: middle;
       margin-right: 12px;
