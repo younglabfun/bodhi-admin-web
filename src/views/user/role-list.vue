@@ -7,9 +7,11 @@
           size="small"
           placeholder="角色名称模糊查询"
           class="filter-item input"
+          clearable
+          @clear="refresh"
           @keyup.enter.native="handleFilter"
         />
-        <el-button size="small" type="primary" class="filter-item" icon="el-icon-search">
+        <el-button size="small" type="primary" class="filter-item" icon="el-icon-search" @click="handleFilter">
           搜索
         </el-button>
       </div>
@@ -151,6 +153,15 @@ export default {
         }
         this.listLoading = false
       })
+    },
+    refresh() {
+      this.listReq.page = 1
+      this.listReq.value = ""
+      this.fetchData()
+    },
+    handleFilter() {
+      this.listReq.page = 1
+      this.fetchData()
     },
     handleCreate() {
       this.$refs['roleForm'].showDialog('create')
